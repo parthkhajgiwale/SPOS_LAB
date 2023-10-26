@@ -1,14 +1,23 @@
 import java.util.Scanner;
+import java.util.Arrays;
 
 class Process {
     private String name;
     private int priority;
     private int burstTime;
+    private int arrivalTime;
+    private int completionTime;
+    private int waitingTime;
+    private int turnaroundTime;
 
-    public Process(String name, int priority, int burstTime) {
+    public Process(String name, int priority, int burstTime, int arrivalTime) {
         this.name = name;
         this.priority = priority;
         this.burstTime = burstTime;
+        this.arrivalTime = arrivalTime;
+        this.completionTime = 0;
+        this.waitingTime = 0;
+        this.turnaroundTime = 0;
     }
 
     public String getName() {
@@ -23,13 +32,41 @@ class Process {
         return burstTime;
     }
 
+    public int getArrivalTime() {
+        return arrivalTime;
+    }
+
+    public int getCompletionTime() {
+        return completionTime;
+    }
+
+    public int getWaitingTime() {
+        return waitingTime;
+    }
+
+    public int getTurnaroundTime() {
+        return turnaroundTime;
+    }
+
+    public void setCompletionTime(int time) {
+        completionTime = time;
+    }
+
+    public void setWaitingTime(int time) {
+        waitingTime = time;
+    }
+
+    public void setTurnaroundTime(int time) {
+        turnaroundTime = time;
+    }
+
     @Override
     public String toString() {
-        return name + " (Priority: " + priority + ", Burst Time: " + burstTime + ")";
+        return name + " (Priority: " + priority + ", Burst Time: " + burstTime + ", Arrival Time: " + arrivalTime + ")";
     }
 }
 
-public class PriorityScheduling {
+public class PrioritySchedulingWithArrivalTime {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
@@ -46,11 +83,18 @@ public class PriorityScheduling {
             int priority = scanner.nextInt();
             System.out.print("Enter burst time for Process " + (i + 1) + ": ");
             int burstTime = scanner.nextInt();
-            processes[i] = new Process(name, priority, burstTime);
+            System.out.print("Enter arrival time for Process " + (i + 1) + ": ");
+            int arrivalTime = scanner.nextInt();
+            processes[i] = new Process(name, priority, burstTime, arrivalTime);
         }
 
-        // Sort processes by priority (lower number indicates higher priority)
-        java.util.Arrays.sort(processes, (p1, p2) -> p1.getPriority() - p2.getPriority());
+        // Sort processes based on priority and arrival time
+        Arrays.sort(processes, (p1, p2) -> {
+            if (p1.getPriority() == p2.getPriority()) {
+                return p1.getArrivalTime() - p2.getArrivalTime();
+            }
+            return p1.getPriority() - p2.getPriority();
+        });
 
         int currentTime = 0;
         double totalWaitingTime = 0;
@@ -59,13 +103,17 @@ public class PriorityScheduling {
         System.out.println("\nProcess Execution Order:");
 
         for (Process process : processes) {
-            int waitingTime = currentTime;
+            int waitingTime = currentTime - process.getArrivalTime();
             int turnaroundTime = waitingTime + process.getBurstTime();
             totalWaitingTime += waitingTime;
             totalTurnaroundTime += turnaroundTime;
 
+            process.setCompletionTime(currentTime + process.getBurstTime());
+            process.setWaitingTime(waitingTime);
+            process.setTurnaroundTime(turnaroundTime);
+
             currentTime += process.getBurstTime();
-            System.out.println("Executing " + process + ", Waited for " + waitingTime + " units.");
+            System.out.println("Executing " + process + ", CT: " + process.getCompletionTime() + ", WT: " + waitingTime + ", TAT: " + turnaroundTime);
         }
 
         double avgWaitingTime = totalWaitingTime / numProcesses;
