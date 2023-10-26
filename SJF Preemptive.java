@@ -5,6 +5,9 @@ class Process {
     private int arrivalTime;
     private int burstTime;
     private int remainingTime;
+    private int completionTime;
+    private int waitingTime;
+    private int turnaroundTime;
 
     public Process(int id, int arrivalTime, int burstTime) {
         this.id = id;
@@ -21,16 +24,25 @@ class Process {
         return arrivalTime;
     }
 
-    public int getRemainingTime() {
-        return remainingTime;
+    public int getCompletionTime() {
+        return completionTime;
     }
 
-    public void execute(int time) {
+    public int getWaitingTime() {
+        return waitingTime;
+    }
+
+    public int getTurnaroundTime() {
+        return turnaroundTime;
+    }
+
+    public void execute(int time, int currentTime) {
         remainingTime -= time;
-    }
-
-    public boolean isFinished() {
-        return remainingTime == 0;
+        if (remainingTime == 0) {
+            completionTime = currentTime;
+            turnaroundTime = completionTime - arrivalTime;
+            waitingTime = turnaroundTime - burstTime;
+        }
     }
 }
 
@@ -69,7 +81,7 @@ public class PreemptiveSJF {
             if (!priorityQueue.isEmpty()) {
                 Process shortestJob = priorityQueue.poll();
                 int executionTime = Math.min(shortestJob.getRemainingTime(), 1);
-                shortestJob.execute(executionTime);
+                shortestJob.execute(executionTime, currentTime);
                 currentTime += executionTime;
                 System.out.println("Executing " + shortestJob.getId() + " for 1 unit.");
                 if (shortestJob.isFinished()) {
@@ -78,6 +90,12 @@ public class PreemptiveSJF {
             } else {
                 currentTime++;
             }
+        }
+
+        // Calculate and display completion, waiting, and turnaround times
+        System.out.println("\nProcess\tCompletion Time\tWaiting Time\tTurnaround Time");
+        for (Process process : processes) {
+            System.out.println("P" + process.getId() + "\t\t" + process.getCompletionTime() + "\t\t" + process.getWaitingTime() + "\t\t" + process.getTurnaroundTime());
         }
 
         scanner.close();
